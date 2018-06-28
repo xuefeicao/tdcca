@@ -1,0 +1,10 @@
+#!/bin/bash
+cd 100_20_20_200
+sbatch myj_sim_test_100_20_20_200.sh
+cd ../100_50_50_200
+sbatch myj_sim_test_100_50_50_200.sh
+cd ../20_20_20_200
+sbatch myj_sim_test_20_20_20_200.sh
+cd ../50_100_100_200
+sbatch myj_sim_test_50_100_100_200.sh
+
