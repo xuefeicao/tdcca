@@ -3,13 +3,13 @@ Canonical Correlation Analysis is a technique in multivariate data analysis for 
 
 
 ## Getting Started
-This package supports both python 2.7 and python 3.6.
-
-Example provided in the repo has been tested in mac os and Linux environment. 
+We provide both simulation examples used in our paper. The main computation algorithm is not added into class method for the convience of algorithm development for multi-view data. 
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. 
 
-This package is also published in pypi.  For a quick installation, try
+This package also provides other algorithms to optimize the function, including cvxpy naive optimization, cvxpy naive admm optimization and two other admm algorithms. For details, see the admm_computation.py file. However, these functions have not been tested thoroughly. 
+
+This package is also published in pypi. For a quick installation, try
 
 ```
 pip install tdcca 
@@ -26,7 +26,7 @@ See setup.py for details of packages requirements.
 ### Installing from GitHub
 
 
-Download the packages by using git clone https://github.com/xuefeicao/cdn.git
+Download the packages by using git clone https://github.com/xuefeicao/tdcca.git
 
 ```
 python setup.py install
@@ -57,7 +57,7 @@ The test is going to be added in the future.
 
 ## Compatibility
 * python 2.7
-* python 3.6 
+
 
 ## Authors
 
