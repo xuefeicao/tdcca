@@ -591,7 +591,6 @@ def admm_comp(data_X, val_config, method, k_fold, with_init={}, test=False, outp
         l6 = 1e32
         loss_0 = obj_value(W_i, W_i_t, W_i_h, Phi, Theta, Psi, i, ll)
         loss_1 = loss_0 + 1
-
         iter = 0
         _conv = True
 

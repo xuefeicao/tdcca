@@ -3,7 +3,7 @@ import os
 from pathos.multiprocessing import ProcessingPool as Pool
 from six.moves import cPickle as pickle
 from tcca_config import Tcca_config, Validation_config
-from admm_computation_2 import admm_comp 
+from admm_computation import admm_comp 
 from data_preprocess import data_prepare
 from functools import partial
 from sklearn.model_selection import KFold
@@ -11,19 +11,18 @@ from sklearn.preprocessing import scale
 from shutil import copyfile
 from shutil import rmtree
 import time
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 from scipy import stats
 from copy import deepcopy
 import math
 
 
 def scale_val(X, scaling, X_1=[]):
+    """
+    scale the data
+    """
     T = X.shape[2]
     d = X.shape[1]
-    n = X.shape[0]
-    # / d
+
     X_ans = np.copy(X)
     
     for t in range(T):
@@ -34,34 +33,18 @@ def scale_val(X, scaling, X_1=[]):
             X_1 = np.copy(X_1)
             X_1[:,:,t] = X_1[:,:,t] - np.mean(X_1[:,:,t], axis=0)
     tmp = min([max(np.sum(X_ans[:,:,t]**2,axis=0)) for t in range(T)])**0.5
-    #print tmp/d
+
     for t in range(T):
-            
-        if not scaling:
-            if d > 150:
-                # real data 
-                X_ans[:,:,t] = X_ans[:,:,t]*tmp/(d*np.amax(np.sum(X_ans[:,:,t]**2,axis=0)**0.5))
-                #X_ans[:,:,t] = X_ans[:,:,t]*tmp/(d*np.sum(X_ans[:,:,t]**2,axis=0)**0.5)
-                X_ans[:,:,t] = X_ans[:,:,t]/np.amax(np.sum(X_ans[:,:,t]**2,axis=0)**0.5 * d**0.5)
-                if len(X_1) > 1:
-                    #X_1[:,:,t] = X_1[:,:,t]*(np.sum(X_ans[:,:,t]**2,axis=0)**0.5)/(d*np.sum(X_1[:,:,t]**2,axis=0)**0.5)
-                    #X_1[:,:,t] = X_1[:,:,t]/(d*np.sum(X_ans[:,:,t]**2,axis=0)**0.5)
-                    pass
-            else:
-            	X_ans[:,:,t] = X_ans[:,:,t]/(d*np.amax(np.sum(X_ans[:,:,t]**2,axis=0)**0.5))
-                
-                
-                #if t <= 1:
-                #    print np.sum(X_ans[:,:,t]**2, axis=0)
-                #X_ans[:,:,t] = X_ans[:,:,t]/d
-        else:
-            X_ans[:,:,t] = X_ans[:,:,t]/np.amax(np.sum(X_ans[:,:,t]**2,axis=0)**0.5 * d)
+        X_ans[:,:,t] = X_ans[:,:,t]/np.amax(np.sum(X_ans[:,:,t]**2,axis=0)**0.5 * d)
 
     if len(X_1) > 1:
         return X_ans, X_1 
     else:
         return X_ans
 def scale_val_d(data, scaling):
+    """
+    scale the data 
+    """
     data = deepcopy(data)
     for i in range(len(data)):
         data[i] = scale_val(data[i], scaling)
@@ -69,14 +52,36 @@ def scale_val_d(data, scaling):
     return data
 
 #TBD fold == 0, remove?
-def admm_val(data_org, lam, mu, nu, folder_name, real_W = None, num_cores=8, admm_method='admm_2',max_iter=1000, tol_admm=1e-2, T_dif=[],  folds=2, with_one=True, out_put=False, tol_eig=0.8, shuffle=False,rel1='nprop', with_sign=True, scaling=True, pre_sign=False, with_init = {}, test=True, with_init_part=[{}]*5):
-    """use multiple lam, mu, nu for ADMM and select tuning parameters
+def admm_val(data_org, lam, mu, nu, folder_name, real_W = None, num_cores=8, admm_method='admm_2',max_iter=1000, tol_admm=1e-2, T_dif=[],  folds=2, with_one=True, out_put=False, tol_eig=0.8, shuffle=False, rel1='nprop', scaling=True, pre_sign=True, with_init = {}, test=True, with_init_part=[{}]*5):
+    """ 
+    use multiple lam, mu, nu for ADMM and select tuning parameters
+
     Parameters
     ----------
-    data, lam, mu, nu (training tuning parameters); folder_name(data saving directory); real_W(sysnthetic data corresponding   result),
+    data: dict {0:X, 1:Y}, X \in R^{n * d_1 * T}, Y \in R^{n * d_2 * T}
+    lam, mu, nu :training tuning parameters, list of scalar
+    folder_name: data and estimation saving directory, dir for saving entire analysis 
+    real_W: sysnthetic data corresponding truth, default None
+    num_cores: parallel computing for multi tuning parameters
+    admm_method: default 'admm_2' used in our paper
+    max_iter: max iteration
+    tol_admm: tol of convergence
+    T_dif: list of change points if known, used for evaluation in simulations
+    folds: k-fold cross-validations
+    with_one: boolean variable, if true, we only do one validation, used to save time.
+              For example, if folds=5, we partition into five datasets 1, 2, 3, 4, 5 but only use dataset 1 to do validation. 
+    output: verbose details of computation
+    tol_eig: the cut off for svd of X and Y used in preprocessing data
+    shuffle: whether to shuffle data to produce k-folds datasets for validation. 
+    scaling: boolean variable
+    rel1: keep this for future algorithm dev. do not modify
+    with_init: dict of init values for W, W_h, W_t, Theta, Phi for the whole dataset.
+    with_init_part: dict of init values for W, W_h, W_t, Theta, Phi for each fold of datset.
+    pre_sign: True, do not modify
+
     Returns
     -------
-    None
+    Selected tuning para
     """
     
 
@@ -85,7 +90,6 @@ def admm_val(data_org, lam, mu, nu, folder_name, real_W = None, num_cores=8, adm
         folder_name_val = folder_name + 'val_init/'
     else: 
         folder_name_val = folder_name + 'val/'
-        #max_iter = 2*max_iter
 
     if not os.path.exists(folder_name_full):
         os.mkdir(folder_name_full)
@@ -115,9 +119,6 @@ def admm_val(data_org, lam, mu, nu, folder_name, real_W = None, num_cores=8, adm
         kf = KFold(folds, shuffle=shuffle)
         fold = 1
         for train_index, test_index in kf.split(range(len(data_org[0]))):
-            #folder_name_i = folder_name_full + str(fold) + '/'
-            #if not os.path.exists(folder_name_i):
-            #    os.makedirs(folder_name_i)
             if os.path.exists(folder_name_full + str(fold) + '/data.pkl'):
                 with open(folder_name_full + str(fold) + '/data.pkl') as f:
                         print 'used 1 data'
@@ -233,7 +234,7 @@ def admm_val(data_org, lam, mu, nu, folder_name, real_W = None, num_cores=8, adm
         if num_cores > 1 and len(para) > 0:
             print 'multi-cores'
             pool = Pool(min(num_cores, len(para)))
-            val_results = pool.map(val_all_method, para)
+            pool.map(val_all_method, para)
             pool.close()
             time.sleep(10)
             pool.join()
@@ -242,15 +243,7 @@ def admm_val(data_org, lam, mu, nu, folder_name, real_W = None, num_cores=8, adm
             for i in range(len(para)):
                 val_all_method(para[i])
 
-        max_cor_score = 0
-        max_auc_score = 0
-        max_F1_score = 0
-        max_T_dif = 0
-        res_1 = []
-        res_2 = []
-        res_3 = []
-        res_4 = []
-        
+    
 
         files_done = [folder_name_val+f for f in os.listdir(folder_name_val) if os.path.isdir(folder_name_val+f)]
         files_done = sorted(files_done)
@@ -258,10 +251,10 @@ def admm_val(data_org, lam, mu, nu, folder_name, real_W = None, num_cores=8, adm
         res = []
         ijk = []
         dif_lam_mu = []
-        if 'test_para_1' in folder_name_full:
-            p_cor = 0.1
-        #if len(with_init) < 5:
-        #    p_cor = 0
+        p_cor = 0 
+        #if 'test_para_1' in folder_name_full:
+        #    p_cor = 0.1
+       
         for ff in files_done:
             with open(ff+'/W.pkl','rb') as f:
                 save = pickle.load(f)
@@ -287,12 +280,11 @@ def admm_val(data_org, lam, mu, nu, folder_name, real_W = None, num_cores=8, adm
             for i in range(len(tmp_norm)):
                 s.append(abs(min(tmp_norm[i]) - max(tmp_norm[i]))/(max(tmp_norm[i]) + min(tmp_norm[i])))
             return True
-            return np.mean(s) < 0.3
+            #return np.mean(s) < 0.3
         cor_pre = np.nanmax([item[1] for item in res])
-        print 'max_core:', cor_pre
+        
         
         tmp = [(norm_cmp(item), np.nan_to_num(item[1])*norm_cmp(item) + p_cor*(1-item[6]), 1-item[6], T_dif_av) for item in res]
-        print tmp
         max_cor_ind = sorted(range(len(res)), key=lambda x: tmp[x])[-1]
 
         tmp = [item[2] for item in res]
@@ -346,12 +338,10 @@ def admm_val(data_org, lam, mu, nu, folder_name, real_W = None, num_cores=8, adm
                 _save = True
                 if f_name == '/init.pkl':
                     k_fold = 0
-                    #pr_t[0].max_iter = 2 * pr_t[0].max_iter
                     ff = 'val_sim_'+str(ind1) +'_' + str(ind2) + '_' + str(ind3)
                     copyfile(folder_name_val + ff + '/W.pkl', folder_name_1 + '/init_part.pkl')
                 else:
                     k_fold = 1
-                    #pr_t[0].max_iter = min(5 * pr_t[0].max_iter, 1e4)
                     with open(folder_name_1 + '/init_part.pkl','rb') as f:
                         save = pickle.load(f)
                         cor_score = np.mean(save['cor_score'])
