@@ -3,58 +3,53 @@ from six.moves import cPickle as pickle
 import numpy as np
 
 
-def multi_sim(data, lam, mu, nu, folder_name, real_W, num_cores, admm_method, max_iter=5000, tol_admm=1e-4, folds=5, T_dif=[], num_val=2, scaling=True, with_sign=True, pre_sign=True, by_pass=True, mu_init=[], calculate_init=True, with_init={}, test=False, with_one=True):
+def multi_sim(data, lam, mu, nu, folder_name, real_W=None, T_dif=[], num_cores=1, admm_method='admm_2',max_iter=1000, tol_admm=1e-2, folds=2, with_one=True, out_put=False, tol_eig=0.8, shuffle=False, scaling=True, pre_sign=True, ratio_y=[1], test=False,  mu_init=[], calculate_init=True, num_val):
     """
-    use multi simulations 
-    @para same as admm_val
-    data: list of data
-    folder_name: list of folder names 
-    """
+    test for multi simulations 
     
+    Parameters
+    --------------------------
+    data: list of data ,e.g [{0:X_sim_1, 1:Y_sim_1}, {0:X_sim_1, 1:Y_sim_2}]
+    folder_name: list of folder names for each dataset 
+    real_W: sysnthetic data corresponding truth, default None
+    num_cores: parallel computing for multi tuning parameters
+    admm_method: default 'admm_2' used in our paper
+    max_iter: max iteration
+    tol_admm: tol of convergence
+    T_dif: list of change points if known, used for evaluation in simulations
+    folds: k-fold cross-validations
+    with_one: boolean variable, if true, we only do one validation, used to save time.
+              For example, if folds=5, we partition into five datasets 1, 2, 3, 4, 5 but only use dataset 1 to do validation. 
+    output: verbose details of computation
+    tol_eig: the cut off for svd of X and Y used in preprocessing data
+    shuffle: whether to shuffle data to produce k-folds datasets for validation. 
+    scaling: boolean variable
+    pre_sign: True, do not modify
+    ratio_y: list of scalar ,e.g [1, 2] which indicates the penalty for y can be [lambda, mu] or [2*lambda, 2*mu].
+             use this when you need different penalty on x and y 
+    test: whether to compare with cvxpy result
+    mu_init: use very low mu for first step, the mu used in first step will be min(mu)*mu_init 
+    calculate_init: whether to use two step method 
+    num_val: integer, 1 when you only do validation for one of your dataset and use that for the remaining
+             otherwise pass 2 into the function
     
-    
-    if by_pass:
-        nu = [10]
-        lam = [0.0001, 0.001]
-        mu = [0.0001, 0.0002, 0.0005, 0.0008, 0.001, 0.002, 0.005]
+    Returns
+    ---------------------------
+    None 
 
+    """
+    
+    
+    
+   
         
 
-    if not real_W:
-        
-        if 'task' in folder_name[0]:
-            tol_admm = 1e-4
-            max_iter = 500
-            if data[0][0].shape[1] < 500:
-                for key in data[0]:
-                    data[0][key] = data[0][key][:,:,:130]
-           
-                
-                nu = [10]
+ 
             
-                if '223_1/' in folder_name[0]:
-                    #lam = [0.0001, 0.0005, 0.001, 0.002, 0.003, 0.005, 0.007, 0.01]
-                
-                    lam = [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1]
-                    #lam = [0.0001, 0.0005, 0.001]
-                    #mu = [0.001, 0.01, 0.02, 0.05, 0.1, 0.5, 1, 5]
-                    mu = [0.001, 0.01, 0.05, 0.1, 0.5, 1, 5, 10, 50, 100]
-                    #mu = [0.001, 0.01, 0.02]
-                elif '223_2/' in folder_name[0]:
-                    lam = [0.007, 0.07, 0.7, 7]
-                    mu = [0.001, 0.01, 0.05, 0.5, 1]
-                else: 
-                    lam = [0.0007, 0.007, 0.07, 0.7, 7]
-                    mu = [0.002, 0.02, 0.2, 2, 10]
-                
-                nu_init = nu
-                print data[0][0].shape[2]
-        else:
-            nu_init = [1]
-    else:
-        nu_init = nu 
+  
     lam_init = lam
-    mu_init = [1e-10*min(mu)]
+    nu_init = nu 
+    mu_init = [nu_init*min(mu)]
     print 'max_iter:{0} and tol:{1}'.format(max_iter, tol_admm)
         
     print 'para:', lam, mu, nu
@@ -97,7 +92,6 @@ def multi_sim(data, lam, mu, nu, folder_name, real_W, num_cores, admm_method, ma
                 NORM.append(check_norm)
                 COR.append(cor_score)
                 #check_conv = save['check_conv']
-        print T_DIF
         print '##################################################################'
         print 'result(COR: %.4f, AUC: %.4f, F1: %.4f, T_DIF: %.4f, NORM: %.4f):'%(np.mean(COR), np.mean(AUC), np.mean(F1), np.mean(T_DIF), np.mean(NORM)), para
         print 'result(COR: %.4f, AUC: %.4f, F1: %.4f, T_DIF: %.4f, NORM: %.4f):'%(np.std(COR), np.std(AUC), np.std(F1), np.std(T_DIF), np.std(NORM)), para

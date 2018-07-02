@@ -52,7 +52,7 @@ def scale_val_d(data, scaling):
     return data
 
 #TBD fold == 0, remove?
-def admm_val(data_org, lam, mu, nu, folder_name, real_W = None, T_dif=[], num_cores=8, admm_method='admm_2',max_iter=1000, tol_admm=1e-2, folds=2, with_one=True, out_put=False, tol_eig=0.8, shuffle=False, rel1='nprop', scaling=True, pre_sign=True, with_init = {}, test=True, with_init_part=[{}]*5, ratio_y=[1]):
+def admm_val(data_org, lam, mu, nu, folder_name, real_W=None, T_dif=[], num_cores=8, admm_method='admm_2',max_iter=1000, tol_admm=1e-2, folds=2, with_one=True, out_put=False, tol_eig=0.8, shuffle=False, scaling=True, rel1='nprop', pre_sign=True, with_init = {}, with_init_part=[{}]*5, ratio_y=[1], test=False):
     """ 
     use multiple lam, mu, nu for ADMM and select tuning parameters
 
@@ -80,6 +80,7 @@ def admm_val(data_org, lam, mu, nu, folder_name, real_W = None, T_dif=[], num_co
     pre_sign: True, do not modify
     ratio_y: list of scalar ,e.g [1, 2] which indicates the penalty for y can be [lambda, mu] or [2*lambda, 2*mu].
              use this when you need different penalty on x and y 
+    test: whether to compare with cvxpy result
 
     Returns
     -------
