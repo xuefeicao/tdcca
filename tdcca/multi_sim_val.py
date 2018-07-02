@@ -3,13 +3,15 @@ from six.moves import cPickle as pickle
 import numpy as np
 
 
-def multi_sim(data, lam, mu, nu, folder_name, real_W=None, T_dif=[], num_cores=1, admm_method='admm_2',max_iter=1000, tol_admm=1e-2, folds=2, with_one=True, out_put=False, tol_eig=0.8, shuffle=False, scaling=True, pre_sign=True, ratio_y=[1], test=False,  mu_init=[], calculate_init=True, num_val=2):
+def multi_sim(data, lam, mu, nu, num_l, folder_name, real_W=None, T_dif=[], num_cores=1, admm_method='admm_2',max_iter=1000, tol_admm=1e-2, folds=2, with_one=True, out_put=False, tol_eig=0.8, shuffle=False, scaling=True, pre_sign=True, ratio_y=[1], test=False,  mu_init=[], calculate_init=True, num_val=2):
     """
     test for multi simulations 
     
     Parameters
     --------------------------
     data: list of data ,e.g [{0:X_sim_1, 1:Y_sim_1}, {0:X_sim_1, 1:Y_sim_2}]
+    lam, mu, nu: tuning para
+    num_l: number of canonical vectors
     folder_name: list of folder names for each dataset 
     real_W: sysnthetic data corresponding truth, default None
     num_cores: parallel computing for multi tuning parameters

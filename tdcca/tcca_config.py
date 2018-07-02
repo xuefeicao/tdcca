@@ -6,7 +6,7 @@ class Tcca_config:
     """
     initialized in seperate folder such as simulation folder
     """
-    def __init__(self, data, data_test, folder_name, tol_admm=1e-2, max_iter=1e3, tol_eig=1e-2, out_put=False, rel='neq', rel1 = 'nprop', l=1):
+    def __init__(self, data, data_test, folder_name, tol_admm=1e-4, max_iter=5e3, tol_eig=0.8, out_put=False, rel='neq', rel1 = 'nprop', l=1):
         self.X = data 
         self.X_test = data_test 
         self.l = l 

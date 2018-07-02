@@ -71,9 +71,7 @@ def data_prepare(data_X, folder_name, nu, pre_sign=True, same_cut=True, add_clas
             ind = np.ravel_multi_index((i,t),(N,T))
             if pre_sign:
 
-                if t >= 1:
-                    cut_ind_0 = SVD_x[ind-1][2].shape[1]
-                
+                if t >= 1:                
                     if np.sum(abs(U_1it[:,0] - SVD_x[ind-1][2][:,0])) > np.sum(abs(-U_1it[:,0]-SVD_x[ind-1][2][:,0])):
                         #print U_1it, SVD_x[ind-1][2]
                         U_1it = - U_1it

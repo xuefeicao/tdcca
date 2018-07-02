@@ -60,6 +60,7 @@ def admm_val(data_org, lam, mu, nu, folder_name, real_W=None, T_dif=[], num_core
     ----------
     data: dict {0:X, 1:Y}, X \in R^{n * d_1 * T}, Y \in R^{n * d_2 * T}
     lam, mu, nu :training tuning parameters, list of scalar
+    num_l: number of canonical vectors
     folder_name: data and estimation saving directory, dir for saving entire analysis 
     real_W: sysnthetic data corresponding truth, default None
     num_cores: parallel computing for multi tuning parameters
@@ -81,6 +82,7 @@ def admm_val(data_org, lam, mu, nu, folder_name, real_W=None, T_dif=[], num_core
     ratio_y: list of scalar ,e.g [1, 2] which indicates the penalty for y can be [lambda, mu] or [2*lambda, 2*mu].
              use this when you need different penalty on x and y 
     test: whether to compare with cvxpy result
+
 
     Returns
     -------
@@ -145,7 +147,7 @@ def admm_val(data_org, lam, mu, nu, folder_name, real_W=None, T_dif=[], num_core
         if not os.path.exists(folder_name_i):
             os.makedirs(folder_name_i)
 
-        pr_t[i] = Tcca_config(data[i][0], data[i][1], folder_name_i, max_iter=max_iter, out_put=out_put, tol_eig=tol_eig, tol_admm=tol_admm, rel1 = rel1)
+        pr_t[i] = Tcca_config(data[i][0], data[i][1], folder_name_i, max_iter=max_iter, out_put=out_put, tol_eig=tol_eig, tol_admm=tol_admm, rel1 = rel1, l=num_l)
         pr_t[i].get_di()
         pr_t[i].folder_name_0 = folder_name
         file_tmp = ''.join(os.listdir(folder_name_i))
