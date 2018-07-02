@@ -48,7 +48,7 @@ The examples subfolder includes simulations provided in the paper.
 
 ## Running the tests
 
-The test is going to be added in the future.
+The test has been conducted in both Linux and Mac Os. 
 
 ## Built With
 
