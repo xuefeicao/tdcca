@@ -1,7 +1,7 @@
 import sys
 import os
 import numpy as np 
-sys.path.append('../../')
+sys.path.append('../../..')
 from tdcca import *
 
 import matplotlib
@@ -78,8 +78,8 @@ l = 0
 real_W = {}
 real_W[(0,l)] = np.concatenate((np.repeat(u_1.reshape((-1,1)),T/2,axis=1), np.repeat(u_2.reshape((-1,1)),T/2,axis=1)),axis=1)
 real_W[(1,l)] = np.concatenate((np.repeat(v_1.reshape((-1,1)),T/2,axis=1), np.repeat(v_2.reshape((-1,1)),T/2,axis=1)),axis=1)
-
-multi_sim(data, lam, mu, nu, folder_name_all, real_W, num_cores=8, admm_method='admm_2',max_iter=5000, tol_admm=1e-4, T_dif = [T/2-1], folds=5, num_val=2)
+# see help(multi_sim) for function details
+multi_sim(data, lam, mu, nu, 1, folder_name_all, real_W, num_cores=1, admm_method='admm_2',max_iter=5000, tol_admm=1e-4, T_dif = [T/2-1], folds=5, num_val=2, out_put=False)
 
 
 

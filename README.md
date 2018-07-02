@@ -3,11 +3,9 @@ Canonical Correlation Analysis is a technique in multivariate data analysis for 
 
 
 ## Getting Started
-We provide both simulation examples used in our paper. The main computation algorithm is not added into class method for the convience of algorithm development for multi-view data. 
+We provide both simulation examples used in our paper. The main computation algorithm is not added into the class method for the convinience of algorithm development for multi-view data. The package saves all the analysis to the given folder and saves the prepocessed data into the hdf5 file. The parallel computing with multi-cores is also allowed and tested in Linux system. This package also provides other algorithms to optimize the function, including cvxpy naive optimization, cvxpy naive admm optimization and two other admm algorithms. For details, see the admm_computation.py file. However, these functions have not been tested thoroughly. 
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. 
-
-This package also provides other algorithms to optimize the function, including cvxpy naive optimization, cvxpy naive admm optimization and two other admm algorithms. For details, see the admm_computation.py file. However, these functions have not been tested thoroughly. 
+These instructions will get you a copy of the project up running on your local machine for development and testing purposes. 
 
 This package is also published in pypi. For a quick installation, try
 

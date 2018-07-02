@@ -1,7 +1,8 @@
 import sys
 import os
 import numpy as np 
-sys.path.append('../../')
+sys.path.append('../../..')
+from tdcca import *
 
 
 
@@ -10,6 +11,7 @@ ext = str(n) + '_' + str(d_1) + '_' + str(d_2) + '_' + str(T) + '_1/'
 # write a folder name where you want to save the analysis
 folder_name = 'data/' + ext 
 
+# number of independent trials 
 num_sim = 1
 
 u_1 = np.zeros((d_1,))
@@ -106,7 +108,7 @@ lam = [(10**i) for i in range(-2,2)] + [5*(10**i) for i in range(-2,2)]
 mu = [10**i for i in range(-2,2)] + [5*(10**i) for i in range(-2,2)] 
 
 
-multi_sim(data, lam, mu, nu, folder_name_all, real_W, num_cores=10, admm_method='admm_2',max_iter=5000, tol_admm=1e-4, T_dif = [T/2-1], folds=5, num_val=2, scaling=False, pre_sign=True, with_sign=True, by_pass=False, calculate_init=True)
+multi_sim(data, lam, mu, nu, 1, folder_name_all, real_W, num_cores=1, admm_method='admm_2',max_iter=5000, tol_admm=1e-4, T_dif = [T/2-1], folds=5, num_val=2, scaling=True, pre_sign=True, calculate_init=True)
 
 
 

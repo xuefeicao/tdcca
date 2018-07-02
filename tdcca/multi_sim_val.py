@@ -3,14 +3,14 @@ from six.moves import cPickle as pickle
 import numpy as np
 
 
-def multi_sim(data, lam, mu, nu, num_l, folder_name, real_W=None, T_dif=[], num_cores=1, admm_method='admm_2',max_iter=1000, tol_admm=1e-2, folds=2, with_one=True, out_put=False, tol_eig=0.8, shuffle=False, scaling=True, pre_sign=True, ratio_y=[1], test=False,  mu_init=[], calculate_init=True, num_val=2):
+def multi_sim(data, lam, mu, nu, num_l, folder_name, real_W=None, T_dif=[], num_cores=1, admm_method='admm_2',max_iter=1000, tol_admm=1e-2, folds=2, with_one=True, out_put=True, tol_eig=0.8, shuffle=False, scaling=True, pre_sign=True, ratio_y=[1], test=False,  mu_init=1e-10, calculate_init=True, num_val=2, p_cor=0.1):
     """
     test for multi simulations 
     
     Parameters
     --------------------------
     data: list of data ,e.g [{0:X_sim_1, 1:Y_sim_1}, {0:X_sim_1, 1:Y_sim_2}]
-    lam, mu, nu: tuning para
+    lam, mu, nu: tuning para. When input is (lam, mu, nu), the tuning para used is actually (lam*nu, mu*nu, nu). 
     num_l: number of canonical vectors
     folder_name: list of folder names for each dataset 
     real_W: sysnthetic data corresponding truth, default None
@@ -36,6 +36,11 @@ def multi_sim(data, lam, mu, nu, num_l, folder_name, real_W=None, T_dif=[], num_
     calculate_init: whether to use two step method 
     num_val: integer, 1 when you only do validation for one of your dataset and use that for the remaining
              otherwise pass 2 into the function
+    p_cor: we add some weight on the sparsity of the solutions when choosing the tuning parameters
+        the score for each group of tuning parameters is cor + p_cor*(1-sparsity)*max_cor
+        This is not necessary when you have good tuning parameters candiates. 
+        Otherwise, you may miss the sparse sols and in this case, adding some score for those with high
+        sparsity might be a good idea. 
     
     Returns
     ---------------------------
@@ -43,22 +48,14 @@ def multi_sim(data, lam, mu, nu, num_l, folder_name, real_W=None, T_dif=[], num_
 
     """
     
-    
-    
-   
-        
-
- 
-            
-  
     lam_init = lam
     nu_init = nu 
-    mu_init = [nu_init*min(mu)]
+    mu_init = [mu_init*min(mu)]
     print 'max_iter:{0} and tol:{1}'.format(max_iter, tol_admm)
         
     print 'para:', lam, mu, nu
     if calculate_init:
-        ans = admm_val(data[0], lam_init, mu_init, nu_init, folder_name[0], real_W, num_cores, admm_method,max_iter, tol_admm, T_dif, folds, scaling=scaling, with_sign=with_sign, pre_sign=pre_sign, with_one=with_one)
+        ans = admm_val(data[0], lam_init, mu_init, nu_init, num_l, folder_name[0], real_W, T_dif, num_cores, admm_method, max_iter, tol_admm, folds, with_one, out_put, tol_eig, shuffle, scaling, pre_sign, ratio_y=[1], test=False, p_cor=p_cor)
         print 'init finished'
         with_init = ans[1]
         with_init_part = ans[2]
@@ -68,7 +65,7 @@ def multi_sim(data, lam, mu, nu, num_l, folder_name, real_W=None, T_dif=[], num_
         with_init_part = [{'W':None}]
 
 
-    lam_0, mu_0, nu_0 = admm_val(data[0], lam, mu, nu, folder_name[0], real_W, num_cores, admm_method,max_iter, tol_admm, T_dif, folds, scaling=scaling, with_sign=with_sign, pre_sign=pre_sign, with_init = with_init, test=test, with_init_part = with_init_part, with_one=with_one)
+    lam_0, mu_0, nu_0 = admm_val(data[0], lam, mu, nu, num_l, folder_name[0], real_W, T_dif, num_cores, admm_method,max_iter, tol_admm, folds, with_one, out_put, tol_eig, scaling, pre_sign, with_init = with_init, test=test, with_init_part = with_init_part, ratio_y=ratio_y, p_cor=p_cor)
 
 
     def p_ans(nums):
@@ -85,7 +82,7 @@ def multi_sim(data, lam, mu, nu, num_l, folder_name, real_W=None, T_dif=[], num_
                 save = pickle.load(f)
                 para = save['para']
                 auc_score = np.mean(save['auc_score'])
-                spar = np.mean(save['spar'])
+                #spar = np.mean(save['spar'])
                 cor_score = np.mean(save['cor_score'])
                 F1_score = np.mean(save['F1_score'])
                 check_norm = np.mean(save['check_norm'])
@@ -98,25 +95,20 @@ def multi_sim(data, lam, mu, nu, num_l, folder_name, real_W=None, T_dif=[], num_
                 #check_conv = save['check_conv']
         print '##################################################################'
         print 'result(COR: %.4f, AUC: %.4f, F1: %.4f, T_DIF: %.4f, NORM: %.4f):'%(np.mean(COR), np.mean(AUC), np.mean(F1), np.mean(T_DIF), np.mean(NORM)), para
-        print 'result(COR: %.4f, AUC: %.4f, F1: %.4f, T_DIF: %.4f, NORM: %.4f):'%(np.std(COR), np.std(AUC), np.std(F1), np.std(T_DIF), np.std(NORM)), para
+        print 'std result(COR: %.4f, AUC: %.4f, F1: %.4f, T_DIF: %.4f, NORM: %.4f):'%(np.std(COR), np.std(AUC), np.std(F1), np.std(T_DIF), np.std(NORM)), para
     if num_val == 1:
         for i in range(1, len(data)):
-            if calculate_init:
-                ans = admm_val(data[i], lam, mu_init, nu, folder_name[i], real_W, num_cores, admm_method,max_iter, tol_admm, T_dif, folds, scaling=scaling, with_sign=with_sign, pre_sign=pre_sign, with_one=with_one)
-                with_init = ans[1]
-            else:
-                with_init = {'W':None}
-            admm_val(data[i], lam_0, mu_0, nu_0, folder_name[i], real_W, num_cores, admm_method, max_iter, tol_admm, T_dif, 0, scaling=scaling, with_sign=with_sign, pre_sign=pre_sign, with_init = with_init, test=test, with_init_part = with_init_part, with_one=with_one)
+            admm_val(data[i], [lam_0], [mu_0], [nu_0], num_l, folder_name[i], real_W, T_dif, num_cores, admm_method, max_iter, tol_admm, 1, False, out_put, tol_eig, shuffle, scaling, pre_sign, ratio_y=[1], test=False, with_init=with_init, with_init_part=with_init_part)
             p_ans(i+1)
     else:
         for i in range(1, len(data)):
             print 'begin:' + str(i)
             if calculate_init:
-                ans = admm_val(data[i], lam, mu_init, nu, folder_name[i], real_W, num_cores, admm_method,max_iter, tol_admm, T_dif, folds, scaling=scaling, with_sign=with_sign, pre_sign=pre_sign, with_one=with_one)
+                ans = admm_val(data[i], lam, mu_init, nu, num_l, folder_name[i], real_W, T_dif, num_cores, admm_method, max_iter, tol_admm, folds, with_one, out_put, tol_eig, shuffle, scaling, pre_sign, ratio_y=[1], test=False, p_cor=p_cor)
                 with_init = ans[1]
             else:
                 with_init = {'W':None}
-            admm_val(data[i], lam, mu, nu, folder_name[i], real_W, num_cores, admm_method, max_iter, tol_admm, T_dif, folds, scaling=scaling, with_sign=with_sign, pre_sign=pre_sign, with_init = with_init, test=test, with_init_part = with_init_part, with_one=with_one)
+            admm_val(data[i], lam, mu, nu, num_l, folder_name[i], real_W, T_dif, num_cores, admm_method,max_iter, tol_admm, folds, with_one, out_put, tol_eig, scaling, pre_sign, with_init = with_init, test=test, with_init_part = with_init_part, ratio_y=ratio_y, p_cor=p_cor)
             p_ans(i+1)
 
         

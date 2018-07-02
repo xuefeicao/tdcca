@@ -2,7 +2,7 @@ import numpy as np
 import os
 import h5py
 import prox_tv as ptv 
-from pathos.multiprocessing import ProcessingPool as Pool
+#from pathos.multiprocessing import ProcessingPool as Pool
 from six.moves import cPickle as pickle
 import matplotlib
 matplotlib.use('Agg')
@@ -36,7 +36,10 @@ def admm_comp(data_X, val_config, method, k_fold, with_init={}, test=False):
     with_init: dictionary, initial value for different parameters-for details, see our paper.
     test: boolean variable, whether to test our data in cvxpy, not used in our paper, users can try.
           In this case, you need to uncomment the related functions.  
-    @return 
+    
+    return 
+    --------------------
+    None 
     """
     l = data_X.l 
     N = data_X.N
@@ -90,7 +93,7 @@ def admm_comp(data_X, val_config, method, k_fold, with_init={}, test=False):
             SVD_x = pickle.load(f)
         with open(folder_name + 'SVD_ijt.pkl') as f:
             SVD_ijt = pickle.load(f)
-        A_f = h5py.File(folder_name + 'UTU_' + str(ind3) + '.hdf5')
+        A_f = h5py.File(folder_name + 'UTU_' + str(ind3) + '.hdf5', 'r')
         if os.path.getsize(folder_name + 'UTU_' + str(ind3) + '.hdf5') < 60 * 1024* 1e6:
             A_inv = dict()
             s_time = time.time()
@@ -115,6 +118,7 @@ def admm_comp(data_X, val_config, method, k_fold, with_init={}, test=False):
     tol_dif = 1e-4
     real_W = val_config.real_W
     T_dif = val_config.T_dif
+
     # cross validation tuning parameters
     
     tol_admm = data_X.tol_admm
@@ -137,12 +141,12 @@ def admm_comp(data_X, val_config, method, k_fold, with_init={}, test=False):
             for t in range(T):
                 SVD_ijt_v[(i,j,t)] = False
     # compare with cvx and cvx_admm
-    if test: 
-        W_cvx_admm = copy.deepcopy(W)
-        W_h_cvx_admm = copy.deepcopy(W_h)
-        W_t_cvx_admm = copy.deepcopy(W_t)
-        Theta_all_cvx_admm = copy.deepcopy(Theta_all)
-        Phi_all_cvx_admm = copy.deepcopy(Phi_all)
+    # if test: 
+    #     W_cvx_admm = copy.deepcopy(W)
+    #     W_h_cvx_admm = copy.deepcopy(W_h)
+    #     W_t_cvx_admm = copy.deepcopy(W_t)
+    #     Theta_all_cvx_admm = copy.deepcopy(Theta_all)
+    #     Phi_all_cvx_admm = copy.deepcopy(Phi_all)
 
 
     
@@ -252,7 +256,7 @@ def admm_comp(data_X, val_config, method, k_fold, with_init={}, test=False):
            
         
 
-    def obj_value_2(W_i, W_i_t, W_i_h, Phi, Theta, i, ll, SVD_ijt, lam=lam, mu=mu, nu=nu, out_put=False):
+    def obj_value_2(W_i, W_i_t, W_i_h, Phi, Theta, i, ll, SVD_ijt, lam=lam, mu=mu, nu=nu, out_put=False, choice='training'):
         """
         compute the value of objective funciton (ADMM)
         """
@@ -280,6 +284,7 @@ def admm_comp(data_X, val_config, method, k_fold, with_init={}, test=False):
             print 'without tuning para:', loss, loss1, loss2, loss_admm_1, loss_admm_2 
             print 'with tuning para:', 1.0/2*loss, loss1*lam, loss2*mu, loss_admm_1, nu/2.0*loss_admm_2, lam, mu, nu, ind1, ind2, ind3
             print np.sum(np.absolute(np.dot(W_i_h, D)), axis=0)
+        if choice == 'final':
             return np.sum(np.absolute(np.dot(W_i_h, D)), axis=0)
         loss = 1.0/2*loss + loss1*lam + loss2*mu+ loss_admm_1 + nu/2.0*loss_admm_2
         return loss 
@@ -335,7 +340,7 @@ def admm_comp(data_X, val_config, method, k_fold, with_init={}, test=False):
          
         loss_0 = obj_value(W_i, W_i_t, W_i_h, Phi, Theta, i, ll, SVD_ijt, lam, mu, nu)
         loss_1 = loss_0 + 1
-
+ 
         _conv = True
         iter = 0
         s_time = time.time()
@@ -391,7 +396,7 @@ def admm_comp(data_X, val_config, method, k_fold, with_init={}, test=False):
                 _conv = False
             if d_i > 1000 and iter%100 == 0:
                 print time.time() - s_time
-        T_dif_i = obj_value(W_i, W_i_t, W_i_h, Phi, Theta, i, ll, SVD_ijt, lam, mu, nu, out_put=output)
+        T_dif_i = obj_value(W_i, W_i_t, W_i_h, Phi, Theta, i, ll, SVD_ijt, lam, mu, nu, out_put=out_put, choice='final')
 
         return W_i, _conv, T_dif_i, W_i_t, W_i_h, Theta, Phi 
 
@@ -876,7 +881,7 @@ def admm_comp(data_X, val_config, method, k_fold, with_init={}, test=False):
             plt.close()
 
             
-    return True
+    
 
    
     

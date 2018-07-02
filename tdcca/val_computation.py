@@ -25,12 +25,18 @@ def scale_val(X, scaling, X_1=[]):
 
     X_ans = np.copy(X)
     
+    if len(X_1) > 1:
+        X_1 = np.copy(X_1)
+    if not scaling:
+        if len(X_1) > 1:
+            return X_ans, X_1 
+        else:
+            return X_ans 
     for t in range(T):
         tmp = np.mean(X_ans[:,:,t], axis=0)
         X_ans[:,:,t] = X_ans[:,:,t] - tmp
         
-        if len(X_1) > 1:
-            X_1 = np.copy(X_1)
+        if len(X_1) > 1: 
             X_1[:,:,t] = X_1[:,:,t] - np.mean(X_1[:,:,t], axis=0)
     tmp = min([max(np.sum(X_ans[:,:,t]**2,axis=0)) for t in range(T)])**0.5
 
@@ -46,13 +52,15 @@ def scale_val_d(data, scaling):
     scale the data 
     """
     data = deepcopy(data)
+    if not scaling:
+        return data     
     for i in range(len(data)):
         data[i] = scale_val(data[i], scaling)
     
     return data
 
 #TBD fold == 0, remove?
-def admm_val(data_org, lam, mu, nu, folder_name, real_W=None, T_dif=[], num_cores=8, admm_method='admm_2',max_iter=1000, tol_admm=1e-2, folds=2, with_one=True, out_put=False, tol_eig=0.8, shuffle=False, scaling=True, rel1='nprop', pre_sign=True, with_init = {}, with_init_part=[{}]*5, ratio_y=[1], test=False):
+def admm_val(data_org, lam, mu, nu, num_l, folder_name, real_W=None, T_dif=[], num_cores=8, admm_method='admm_2',max_iter=1000, tol_admm=1e-2, folds=2, with_one=True, out_put=True, tol_eig=0.8, shuffle=False, scaling=True, pre_sign=True, with_init = {}, with_init_part=[{}]*5, ratio_y=[1], test=False, rel1='nprop', p_cor=0.1):
     """ 
     use multiple lam, mu, nu for ADMM and select tuning parameters
 
@@ -75,13 +83,19 @@ def admm_val(data_org, lam, mu, nu, folder_name, real_W=None, T_dif=[], num_core
     tol_eig: the cut off for svd of X and Y used in preprocessing data
     shuffle: whether to shuffle data to produce k-folds datasets for validation. 
     scaling: boolean variable
-    rel1: keep this for future algorithm dev. do not modify
     with_init: dict of init values for W, W_h, W_t, Theta, Phi for the whole dataset.
     with_init_part: dict of init values for W, W_h, W_t, Theta, Phi for each fold of datset.
     pre_sign: True, do not modify
     ratio_y: list of scalar ,e.g [1, 2] which indicates the penalty for y can be [lambda, mu] or [2*lambda, 2*mu].
              use this when you need different penalty on x and y 
     test: whether to compare with cvxpy result
+    rel1: keep this for future algorithm dev. do not modify
+    p_cor: we add some weight on the sparsity of the solutions when choosing the tuning parameters
+           the score for each group of tuning parameters is cor + p_cor*(1-sparsity)*max_cor
+           This is not necessary when you have good tuning parameters candiates. 
+           Otherwise, you may miss the sparse sols and in this case, adding some score for those with high
+           sparsity might be a good idea. 
+
 
 
     Returns
@@ -199,7 +213,7 @@ def admm_val(data_org, lam, mu, nu, folder_name, real_W=None, T_dif=[], num_core
                 for j in range(len(mu)):
                     if len(para_done) == 0 or np.amin(np.sum(abs(np.array([lam[i],mu[j],mu[j]]) - np.array(para_done)),axis=1)) > min(lam+mu+nu):
                         folder_name_1 = folder_name_val + 'val_sim_'+str(i) +'_' + str(j) + '_' + str(j)
-                        val_c = Validation_config(*[lam[i],mu[j],nu[k]], folder_name=folder_name_1, real_W=real_W, T_dif=T_dif, ijk=[i,j,k], ratio_y=ratio_y=)
+                        val_c = Validation_config(*[lam[i],mu[j],nu[k]], folder_name=folder_name_1, real_W=real_W, T_dif=T_dif, ijk=[i,j,k], ratio_y=ratio_y)
                         para.append([folder_name_1, val_c])
         elif pr_t[1].mu_lam == 'prop':
             for i in range(len(lam)):
@@ -207,7 +221,7 @@ def admm_val(data_org, lam, mu, nu, folder_name, real_W=None, T_dif=[], num_core
                     for k in range(len(nu)):
                         if len(para_done) == 0 or np.amin(np.sum(abs(np.array([lam[i],mu[j],nu[k]]) - np.array(para_done)),axis=1)) > min(lam+mu+nu):
                             folder_name_1 =  folder_name_val + 'val_sim_'+str(i) +'_' + str(j) + '_' + str(k)
-                            val_c = Validation_config(*[lam[i],mu[j],nu[k]], folder_name=folder_name_1, real_W=real_W, T_dif=T_dif, ijk=[i,j,k], ratio_y=ratio_y=)
+                            val_c = Validation_config(*[lam[i],mu[j],nu[k]], folder_name=folder_name_1, real_W=real_W, T_dif=T_dif, ijk=[i,j,k], ratio_y=ratio_y)
                             para.append([folder_name_1, val_c])
 
 
@@ -219,18 +233,20 @@ def admm_val(data_org, lam, mu, nu, folder_name, real_W=None, T_dif=[], num_core
                         if True:
                             if len(para_done) == 0 or np.amin(np.sum(abs(np.array([lam[i]*nu[k],mu[j]*nu[k],nu[k]]) - np.array(para_done)),axis=1)) > min(lam+mu+nu)*min(nu):
                                 folder_name_1 = folder_name_val + 'val_sim_'+str(i) +'_' + str(j) + '_' + str(k)
-                                val_c = Validation_config(*[lam[i],mu[j],nu[k]], folder_name=folder_name_1, real_W=real_W, T_dif=T_dif, ijk=[i,j,k], ratio_y=ratio_y=)
+                                val_c = Validation_config(*[lam[i]*nu[k],mu[j]*nu[k],nu[k]], folder_name=folder_name_1, real_W=real_W, T_dif=T_dif, ijk=[i,j,k], ratio_y=ratio_y)
                                 para.append([folder_name_1, val_c])
 
         val_all_method = partial(val_all, method = admm_method)
 
         if num_cores > 1 and len(para) > 0:
             print 'multi-cores'
-            pool = Pool(min(num_cores, len(para)))
+            print num_cores 
+            pool = Pool(min(num_cores, len(para))+(len(with_init)==5))
             pool.map(val_all_method, para)
+            #time.sleep(10)
             pool.close()
-            time.sleep(10)
             pool.join()
+            pool.clear()
             
         else:
             for i in range(len(para)):
@@ -244,9 +260,8 @@ def admm_val(data_org, lam, mu, nu, folder_name, real_W=None, T_dif=[], num_core
         res = []
         ijk = []
         dif_lam_mu = []
-        p_cor = 0 
-        #if 'test_para_1' in folder_name_full:
-        #    p_cor = 0.1
+
+
        
         for ff in files_done:
             with open(ff+'/W.pkl','rb') as f:
@@ -275,8 +290,8 @@ def admm_val(data_org, lam, mu, nu, folder_name, real_W=None, T_dif=[], num_core
             return True
             #return np.mean(s) < 0.3
         
-        
-        tmp = [(norm_cmp(item), np.nan_to_num(item[1])*norm_cmp(item) + p_cor*(1-item[6]), 1-item[6], T_dif_av) for item in res]
+        cor_pre = np.nanmax([item[1] for item in res])
+        tmp = [(norm_cmp(item), np.nan_to_num(item[1])*norm_cmp(item) + p_cor*(1-item[6])*cor_pre, 1-item[6], T_dif_av) for item in res]
         max_cor_ind = sorted(range(len(res)), key=lambda x: tmp[x])[-1]
 
         tmp = [item[2] for item in res]
@@ -317,7 +332,8 @@ def admm_val(data_org, lam, mu, nu, folder_name, real_W=None, T_dif=[], num_core
         if (folds == 1 and not with_one):
             if not os.path.exists(folder_name_1 + f_name):
                 ff = 'val_sim_'+str(ind1) +'_' + str(ind2) + '_' + str(ind3)
-                copyfile(folder_name_val + ff + '/W.pkl', folder_name_1 + f_name)
+                copyfile(folder_name_val + ff + f_name, folder_name_1 + f_name)
+                print 'data copied'
         else:
             if not os.path.exists(folder_name_1 + f_name) or f_name == '/W.pkl':
                 val_config = Validation_config(*para, folder_name=folder_name_1, T_dif=T_dif, real_W=real_W, ijk=[ind1, ind2, ind3], ratio_y=dif_lam_mu[1])
