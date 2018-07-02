@@ -3,7 +3,7 @@ import os
 from pathos.multiprocessing import ProcessingPool as Pool
 from six.moves import cPickle as pickle
 from tcca_config import Tcca_config, Validation_config
-from admm_computation import admm_comp 
+from tdcca.admm_computation import admm_comp 
 from data_preprocess import data_prepare
 from functools import partial
 from sklearn.model_selection import KFold

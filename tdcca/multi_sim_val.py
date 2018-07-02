@@ -1,9 +1,9 @@
-from val_computation import admm_val
+from tdcca.val_computation import admm_val
 from six.moves import cPickle as pickle
 import numpy as np
 
 
-def multi_sim(data, lam, mu, nu, folder_name, real_W=None, T_dif=[], num_cores=1, admm_method='admm_2',max_iter=1000, tol_admm=1e-2, folds=2, with_one=True, out_put=False, tol_eig=0.8, shuffle=False, scaling=True, pre_sign=True, ratio_y=[1], test=False,  mu_init=[], calculate_init=True, num_val):
+def multi_sim(data, lam, mu, nu, folder_name, real_W=None, T_dif=[], num_cores=1, admm_method='admm_2',max_iter=1000, tol_admm=1e-2, folds=2, with_one=True, out_put=False, tol_eig=0.8, shuffle=False, scaling=True, pre_sign=True, ratio_y=[1], test=False,  mu_init=[], calculate_init=True, num_val=2):
     """
     test for multi simulations 
     
@@ -28,6 +28,8 @@ def multi_sim(data, lam, mu, nu, folder_name, real_W=None, T_dif=[], num_cores=1
     ratio_y: list of scalar ,e.g [1, 2] which indicates the penalty for y can be [lambda, mu] or [2*lambda, 2*mu].
              use this when you need different penalty on x and y 
     test: whether to compare with cvxpy result
+          boolean variable, whether to test our data in cvxpy, not used in our paper, users can try.
+          In this case, you need to uncomment the related functions.  
     mu_init: use very low mu for first step, the mu used in first step will be min(mu)*mu_init 
     calculate_init: whether to use two step method 
     num_val: integer, 1 when you only do validation for one of your dataset and use that for the remaining
