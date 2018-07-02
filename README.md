@@ -36,8 +36,8 @@ If you experience problems related to installing the dependency Matplotlib on OS
 After installing our package locally, try to import tdcca in your python environment and learn about package's function. 
 Note: our package name in pypi is tdcca.
 ```
-from tdcca import multi_sim_val
-help(multi_sim_val.multi_sim)
+from tdcca import *
+help(multi_sim)
 ```
 
 
