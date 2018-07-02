@@ -52,7 +52,7 @@ def scale_val_d(data, scaling):
     return data
 
 #TBD fold == 0, remove?
-def admm_val(data_org, lam, mu, nu, folder_name, real_W = None, num_cores=8, admm_method='admm_2',max_iter=1000, tol_admm=1e-2, T_dif=[],  folds=2, with_one=True, out_put=False, tol_eig=0.8, shuffle=False, rel1='nprop', scaling=True, pre_sign=True, with_init = {}, test=True, with_init_part=[{}]*5):
+def admm_val(data_org, lam, mu, nu, folder_name, real_W = None, T_dif=[], num_cores=8, admm_method='admm_2',max_iter=1000, tol_admm=1e-2, folds=2, with_one=True, out_put=False, tol_eig=0.8, shuffle=False, rel1='nprop', scaling=True, pre_sign=True, with_init = {}, test=True, with_init_part=[{}]*5, ratio_y=[1]):
     """ 
     use multiple lam, mu, nu for ADMM and select tuning parameters
 
@@ -78,6 +78,8 @@ def admm_val(data_org, lam, mu, nu, folder_name, real_W = None, num_cores=8, adm
     with_init: dict of init values for W, W_h, W_t, Theta, Phi for the whole dataset.
     with_init_part: dict of init values for W, W_h, W_t, Theta, Phi for each fold of datset.
     pre_sign: True, do not modify
+    ratio_y: list of scalar ,e.g [1, 2] which indicates the penalty for y can be [lambda, mu] or [2*lambda, 2*mu].
+             use this when you need different penalty on x and y 
 
     Returns
     -------
@@ -194,11 +196,7 @@ def admm_val(data_org, lam, mu, nu, folder_name, real_W = None, num_cores=8, adm
                 for j in range(len(mu)):
                     if len(para_done) == 0 or np.amin(np.sum(abs(np.array([lam[i],mu[j],mu[j]]) - np.array(para_done)),axis=1)) > min(lam+mu+nu):
                         folder_name_1 = folder_name_val + 'val_sim_'+str(i) +'_' + str(j) + '_' + str(j)
-                        val_c = Validation_config(*[lam[i],mu[j],mu[j]], folder_name=folder_name_1)
-                        if real_W:
-                            val_c.real_W = real_W
-                        val_c.T_dif = T_dif
-                        val_c.ijk = [i,j,j]
+                        val_c = Validation_config(*[lam[i],mu[j],nu[k]], folder_name=folder_name_1, real_W=real_W, T_dif=T_dif, ijk=[i,j,k], ratio_y=ratio_y=)
                         para.append([folder_name_1, val_c])
         elif pr_t[1].mu_lam == 'prop':
             for i in range(len(lam)):
@@ -206,11 +204,7 @@ def admm_val(data_org, lam, mu, nu, folder_name, real_W = None, num_cores=8, adm
                     for k in range(len(nu)):
                         if len(para_done) == 0 or np.amin(np.sum(abs(np.array([lam[i],mu[j],nu[k]]) - np.array(para_done)),axis=1)) > min(lam+mu+nu):
                             folder_name_1 =  folder_name_val + 'val_sim_'+str(i) +'_' + str(j) + '_' + str(k)
-                            val_c = Validation_config(*[lam[i],mu[j],nu[k]], folder_name=folder_name_1)
-                            if real_W:
-                                val_c.real_W = real_W
-                            val_c.T_dif = T_dif
-                            val_c.ijk = [i,j,k]
+                            val_c = Validation_config(*[lam[i],mu[j],nu[k]], folder_name=folder_name_1, real_W=real_W, T_dif=T_dif, ijk=[i,j,k], ratio_y=ratio_y=)
                             para.append([folder_name_1, val_c])
 
 
@@ -222,11 +216,7 @@ def admm_val(data_org, lam, mu, nu, folder_name, real_W = None, num_cores=8, adm
                         if True:
                             if len(para_done) == 0 or np.amin(np.sum(abs(np.array([lam[i]*nu[k],mu[j]*nu[k],nu[k]]) - np.array(para_done)),axis=1)) > min(lam+mu+nu)*min(nu):
                                 folder_name_1 = folder_name_val + 'val_sim_'+str(i) +'_' + str(j) + '_' + str(k)
-                                val_c = Validation_config(*[lam[i]*nu[k],mu[j]*nu[k],nu[k]], folder_name=folder_name_1)
-                                if real_W:
-                                    val_c.real_W = real_W
-                                val_c.T_dif = T_dif
-                                val_c.ijk = [i,j,k]
+                                val_c = Validation_config(*[lam[i],mu[j],nu[k]], folder_name=folder_name_1, real_W=real_W, T_dif=T_dif, ijk=[i,j,k], ratio_y=ratio_y=)
                                 para.append([folder_name_1, val_c])
 
         val_all_method = partial(val_all, method = admm_method)
@@ -281,7 +271,6 @@ def admm_val(data_org, lam, mu, nu, folder_name, real_W = None, num_cores=8, adm
                 s.append(abs(min(tmp_norm[i]) - max(tmp_norm[i]))/(max(tmp_norm[i]) + min(tmp_norm[i])))
             return True
             #return np.mean(s) < 0.3
-        cor_pre = np.nanmax([item[1] for item in res])
         
         
         tmp = [(norm_cmp(item), np.nan_to_num(item[1])*norm_cmp(item) + p_cor*(1-item[6]), 1-item[6], T_dif_av) for item in res]
@@ -328,12 +317,7 @@ def admm_val(data_org, lam, mu, nu, folder_name, real_W = None, num_cores=8, adm
                 copyfile(folder_name_val + ff + '/W.pkl', folder_name_1 + f_name)
         else:
             if not os.path.exists(folder_name_1 + f_name) or f_name == '/W.pkl':
-                val_config = Validation_config(*para, folder_name=folder_name_1)
-                if real_W:
-                    val_config.real_W = real_W
-                val_config.T_dif = T_dif
-                val_config.ijk = [ind1,ind2,ind3]
-                val_config.dif_lam_mu = dif_lam_mu
+                val_config = Validation_config(*para, folder_name=folder_name_1, T_dif=T_dif, real_W=real_W, ijk=[ind1, ind2, ind3], ratio_y=dif_lam_mu[1])
                 k_fold = 0 if f_name == '/init.pkl' else 1
                 _save = True
                 if f_name == '/init.pkl':
@@ -367,10 +351,7 @@ def admm_val(data_org, lam, mu, nu, folder_name, real_W = None, num_cores=8, adm
                     'ijk': val_config.ijk,
                     'dif_lam_mu': val_config.dif_lam_mu,
                         }
-                        if hasattr(val_config, 'other'):
-                            save['other'] = val_config.other
-                        if val_config.real_W:
-                            save['real_W'] = val_config.real_W
+                        save['real_W'] = val_config.real_W
                         pickle.dump(save, f, pickle.HIGHEST_PROTOCOL)
                     if pt:
                         print val_config
@@ -395,8 +376,7 @@ def admm_val(data_org, lam, mu, nu, folder_name, real_W = None, num_cores=8, adm
 def print_admm(ind, res, which_criterion):
     check_norm = res[ind][-2]
     print which_criterion +' para, cor_score, auc_score, f1_score, T_dif, T_dif_av, spar, norm_check, conv_check: ', res[ind][0:7], (min(check_norm[0]), max(check_norm[0])), (min(check_norm[1]), max(check_norm[1])), res[ind][-1]
-def para_val(a,b):
-    return a/b <= 5*1e4 and b/a <= 5*1e4
+
     
 
         

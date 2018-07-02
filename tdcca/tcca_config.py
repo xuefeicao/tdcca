@@ -7,7 +7,6 @@ class Tcca_config:
     initialized in seperate folder such as simulation folder
     """
     def __init__(self, data, data_test, folder_name, tol_admm=1e-2, max_iter=1e3, tol_eig=1e-2, out_put=False, rel='neq', rel1 = 'nprop', l=1):
-    # data: dict, (N, num_views, num_parameter, T)
         self.X = data 
         self.X_test = data_test 
         self.l = l 
@@ -32,7 +31,7 @@ class Tcca_config:
 
 
 class Validation_config:
-    def __init__(self, lam, mu, nu, folder_name):
+    def __init__(self, lam, mu, nu, folder_name, real_W, T_dif, ijk, ratio_y=[1]):
         self.lam = lam
         self.mu = mu
         self.nu = nu 
@@ -48,18 +47,20 @@ class Validation_config:
         self.init_tcca = []
         self.T_dif_av = []
         self.cor_score_full_data = []
-        #self.dif_lam_mu = [[1], [0.1, 1, 2]]
-        if 'test' in folder_name:
-            self.dif_lam_mu = [[1], [1]]
-        else:
-            self.dif_lam_mu = [[1], [0.1, 2]]
+        self.dif_lam_mu = [[1], ratio_y]
+        self.ijk = ijk 
+        self.real_W = real_W
+        self.T_dif = T_dif 
+       
 #two 
     def __str__(self):
-        if hasattr(self, 'real_W'):
-            return 'lam:{0} , mu:{1}, nu:{2}, cor_score:{3}, auc_score:{4}, F1_score:{5}, dif_lam_mu:{6}, spar:{7}, ijk:{8}, norm:{9}'.format(self.lam, self.mu, self.nu, np.mean(self.cor_score), np.mean(self.auc_score), np.mean(self.F1_score), self.dif_lam_mu, (np.mean(self.spar[0::2]),np.mean(self.spar[1::2])), self.ijk, [(np.amin(self.check_norm[0::2]), np.amax(self.check_norm[0::2])), (np.amin(self.check_norm[1::2]), np.amax(self.check_norm[1::2]))])
-        else:
-            return 'lam:{0} , mu:{1}, nu:{2}, cor_score:{3}, other:{4}, dif_lam_mu:{5}, spar:{6}, ijk:{7}, norm:{8}, cor_full:{9}'.format(self.lam, self.mu, self.nu, np.mean(self.cor_score), self.other['cluster_score'], self.dif_lam_mu, (np.mean(self.spar[0::2]),np.mean(self.spar[1::2])), self.ijk, [(np.amin(self.check_norm[0::2]), np.amax(self.check_norm[0::2])), (np.amin(self.check_norm[1::2]), np.amax(self.check_norm[1::2]))], np.mean(self.cor_score_full_data))
-
+        try:
+            if self.real_W:
+                return 'lam:{0} , mu:{1}, nu:{2}, cor_score:{3}, auc_score:{4}, F1_score:{5}, dif_lam_mu:{6}, spar:{7}, ijk:{8}, norm:{9}'.format(self.lam, self.mu, self.nu, np.mean(self.cor_score), np.mean(self.auc_score), np.mean(self.F1_score), self.dif_lam_mu, (np.mean(self.spar[0::2]),np.mean(self.spar[1::2])), self.ijk, [(np.amin(self.check_norm[0::2]), np.amax(self.check_norm[0::2])), (np.amin(self.check_norm[1::2]), np.amax(self.check_norm[1::2]))])
+            else:
+                return 'lam:{0} , mu:{1}, nu:{2}, cor_socre:{3}, dif_lam_mu:{4}, spar:{5}, ijk:{6}, norm:{7}, cor_full:{8}'.format(self.lam, self.mu, self.nu, np.mean(self.cor_score), self.dif_lam_mu, (np.mean(self.spar[0::2]),np.mean(self.spar[1::2])), self.ijk, [(np.amin(self.check_norm[0::2]), np.amax(self.check_norm[0::2])), (np.amin(self.check_norm[1::2]), np.amax(self.check_norm[1::2]))], np.mean(self.cor_score_full_data))
+        except:
+            raise(Exception('you need to run the computation first'))
 
 
 

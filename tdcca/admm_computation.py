@@ -24,7 +24,7 @@ import math
 
 
 
-def admm_comp(data_X, val_config, method, k_fold, with_init={}, test=False, output=True):
+def admm_comp(data_X, val_config, method, k_fold, with_init={}, test=False):
     """
     main computation algorithm
     Parameters
@@ -36,13 +36,13 @@ def admm_comp(data_X, val_config, method, k_fold, with_init={}, test=False, outp
     with_init: dictionary, initial value for different parameters-for details, see our paper.
     test: boolean variable, whether to test our data in cvxpy, not used in our paper, users can try.
           In this case, you need to uncomment the related functions.  
-    output: boolean variable, whether to print final loss details, used for our testing. 
     @return 
     """
     l = data_X.l 
     N = data_X.N
     T = data_X.T 
     di = data_X.di
+    out_put = data_X.out_put
     folder_name = data_X.folder_name
     ind1, ind2, ind3 = val_config.ijk
     big_data = False
@@ -51,8 +51,6 @@ def admm_comp(data_X, val_config, method, k_fold, with_init={}, test=False, outp
     with_init = copy.deepcopy(with_init)
     A_inv = None
     cvx_val = None
-    if hasattr(val_config,'real_W'):
-        val_config.dif_lam_mu = [[1] for i in range(N)]
     lam, mu, nu = val_config.lam, val_config.mu, val_config.nu
     if test:
         val_config.time = 0
@@ -115,7 +113,7 @@ def admm_comp(data_X, val_config, method, k_fold, with_init={}, test=False, outp
     max_iter = data_X.max_iter
     out_put = data_X.out_put
     tol_dif = 1e-4
-    #real_W = val_config.real_W
+    real_W = val_config.real_W
     T_dif = val_config.T_dif
     # cross validation tuning parameters
     
@@ -848,7 +846,7 @@ def admm_comp(data_X, val_config, method, k_fold, with_init={}, test=False, outp
     val_config.T_dif_av.append(av_t_dif(T_dif_all))
     
     
-    if hasattr(val_config,'real_W'):
+    if real_W:
         auc_score, F1_score = eval_zero(W_t, N, T, l, val_config.real_W)
         val_config.auc_score.append(auc_score)
         val_config.F1_score.append(F1_score)
