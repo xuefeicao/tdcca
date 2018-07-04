@@ -32,8 +32,8 @@ def admm_comp(data_X, val_config, method, k_fold, with_init={}, test=False):
     data_X: problem class Tcca, including the basic setting of the problem
     val_config: Validation config class, including setting for one validation subproblem
     method: string, one of 'admm_1, admm_2 or admm_3'. our proposed and tested method is admm_2.
-    k_fold: int, kth fold of data used in validation, used for create figures
-    with_init: dictionary, initial value for different parameters-for details, see our paper.
+    k_fold: int, kth fold of data used in validation, used for creating figures
+    with_init: dictionary, the initial value for different parameters-for details, see our paper.
     test: boolean variable, whether to test our data in cvxpy, not used in our paper, users can try.
           In this case, you need to uncomment the related functions.  
     

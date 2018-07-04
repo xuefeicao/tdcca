@@ -12,7 +12,7 @@ def data_prepare(data_X, folder_name, nu, pre_sign=True, same_cut=True, add_clas
 
     Parameters
     ----------------------
-    data_X: class of tcca_config
+    data_X: a class of tcca_config
     folder_name: path for saving the data
     pre_sign: boolean, default True.  
              solving sign issue, first try 

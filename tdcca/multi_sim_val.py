@@ -5,14 +5,14 @@ import numpy as np
 
 def multi_sim(data, lam, mu, nu, num_l, folder_name, real_W=None, T_dif=[], num_cores=1, admm_method='admm_2',max_iter=1000, tol_admm=1e-2, folds=2, with_one=True, out_put=True, tol_eig=0.8, shuffle=False, scaling=True, pre_sign=True, ratio_y=[1], test=False,  mu_init=1e-10, calculate_init=True, num_val=2, p_cor=0.1):
     """
-    test for multi simulations 
+    test for multi simulations
     
     Parameters
     --------------------------
     data: list of data ,e.g [{0:X_sim_1, 1:Y_sim_1}, {0:X_sim_1, 1:Y_sim_2}]
-    lam, mu, nu: tuning para. When input is (lam, mu, nu), the tuning para used is actually (lam*nu, mu*nu, nu). 
+    lam, mu, nu: tuning para. When input is (lam, mu, nu), the tuning para used is actually (lam*nu, mu*nu, nu).
     num_l: number of canonical vectors
-    folder_name: list of folder names for each dataset 
+    folder_name: list of folder names for each dataset
     real_W: sysnthetic data corresponding truth, default None
     num_cores: parallel computing for multi tuning parameters
     admm_method: default 'admm_2' used in our paper
@@ -21,33 +21,33 @@ def multi_sim(data, lam, mu, nu, num_l, folder_name, real_W=None, T_dif=[], num_
     T_dif: list of change points if known, used for evaluation in simulations
     folds: k-fold cross-validations
     with_one: boolean variable, if true, we only do one validation, used to save time.
-              For example, if folds=5, we partition into five datasets 1, 2, 3, 4, 5 but only use dataset 1 to do validation. 
-    output: verbose details of computation
+    For example, if folds=5, we partition into five datasets 1, 2, 3, 4, 5 but only use dataset 1 to do validation.
+    output: verbose details of the computation
     tol_eig: the cut off for svd of X and Y used in preprocessing data
-    shuffle: whether to shuffle data to produce k-folds datasets for validation. 
+    shuffle: whether to shuffle data to produce k-folds datasets for validation.
     scaling: boolean variable
     pre_sign: True, do not modify
     ratio_y: list of scalar ,e.g [1, 2] which indicates the penalty for y can be [lambda, mu] or [2*lambda, 2*mu].
-             use this when you need different penalty on x and y 
+    use this when you need different penalty on x and y
     test: whether to compare with cvxpy result
-          boolean variable, whether to test our data in cvxpy, not used in our paper, users can try.
-          In this case, you need to uncomment the related functions.  
-    mu_init: use very low mu for first step, the mu used in first step will be min(mu)*mu_init 
-    calculate_init: whether to use two step method 
-    num_val: integer, 1 when you only do validation for one of your dataset and use that for the remaining
-             otherwise pass 2 into the function
+    boolean variable, whether to test our data in cvxpy, not used in our paper, users can try.
+    In this case, you need to uncomment the related functions.
+    mu_init: use very low mu for the first step, the mu used in the first step will be min(mu)*mu_init
+    calculate_init: whether to use two step method
+    num_val: integer, 1 when you only do validation for one of your datasets and use that for the remaining
+    otherwise, pass 2 into the function
     p_cor: we add some weight on the sparsity of the solutions when choosing the tuning parameters
-        the score for each group of tuning parameters is cor + p_cor*(1-sparsity)*max_cor
-        This is not necessary when you have good tuning parameters candiates. 
-        Otherwise, you may miss the sparse sols and in this case, adding some score for those with high
-        sparsity might be a good idea. 
+    the score for each group of tuning parameters is cor + p_cor*(1-sparsity)*max_cor
+    This is not necessary when you have good tuning parameters candidates.
+    Otherwise, you may miss the sparse sols and in this case, adding some score for those with high
+    sparsity might be a good idea.
     
     Returns
     ---------------------------
-    None 
-
-    """
+    None
     
+    """
+
     lam_init = lam
     nu_init = nu 
     mu_init = [mu_init*min(mu)]

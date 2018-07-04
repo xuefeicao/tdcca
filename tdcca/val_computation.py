@@ -61,15 +61,15 @@ def scale_val_d(data, scaling):
 
 #TBD fold == 0, remove?
 def admm_val(data_org, lam, mu, nu, num_l, folder_name, real_W=None, T_dif=[], num_cores=8, admm_method='admm_2',max_iter=1000, tol_admm=1e-2, folds=2, with_one=True, out_put=True, tol_eig=0.8, shuffle=False, scaling=True, pre_sign=True, with_init = {}, with_init_part=[{}]*5, ratio_y=[1], test=False, rel1='nprop', p_cor=0.1):
-    """ 
+    """
     use multiple lam, mu, nu for ADMM and select tuning parameters
-
+    
     Parameters
     ----------
     data: dict {0:X, 1:Y}, X \in R^{n * d_1 * T}, Y \in R^{n * d_2 * T}
     lam, mu, nu :training tuning parameters, list of scalar
     num_l: number of canonical vectors
-    folder_name: data and estimation saving directory, dir for saving entire analysis 
+    folder_name: data and estimation saving directory, dir for saving entire analysis
     real_W: sysnthetic data corresponding truth, default None
     num_cores: parallel computing for multi tuning parameters
     admm_method: default 'admm_2' used in our paper
@@ -78,26 +78,25 @@ def admm_val(data_org, lam, mu, nu, num_l, folder_name, real_W=None, T_dif=[], n
     T_dif: list of change points if known, used for evaluation in simulations
     folds: k-fold cross-validations
     with_one: boolean variable, if true, we only do one validation, used to save time.
-              For example, if folds=5, we partition into five datasets 1, 2, 3, 4, 5 but only use dataset 1 to do validation. 
+    For example, if folds=5, we partition into five datasets 1, 2, 3, 4, 5 but only use dataset 1 to do validation.
     output: verbose details of computation
     tol_eig: the cut off for svd of X and Y used in preprocessing data
-    shuffle: whether to shuffle data to produce k-folds datasets for validation. 
+    shuffle: whether to shuffle data to produce k-folds datasets for validation.
     scaling: boolean variable
     with_init: dict of init values for W, W_h, W_t, Theta, Phi for the whole dataset.
-    with_init_part: dict of init values for W, W_h, W_t, Theta, Phi for each fold of datset.
+    with_init_part: dict of init values for W, W_h, W_t, Theta, Phi for each fold of dataset.
     pre_sign: True, do not modify
     ratio_y: list of scalar ,e.g [1, 2] which indicates the penalty for y can be [lambda, mu] or [2*lambda, 2*mu].
-             use this when you need different penalty on x and y 
+    use this when you need different penalty on x and y
     test: whether to compare with cvxpy result
     rel1: keep this for future algorithm dev. do not modify
     p_cor: we add some weight on the sparsity of the solutions when choosing the tuning parameters
-           the score for each group of tuning parameters is cor + p_cor*(1-sparsity)*max_cor
-           This is not necessary when you have good tuning parameters candiates. 
-           Otherwise, you may miss the sparse sols and in this case, adding some score for those with high
-           sparsity might be a good idea. 
-
-
-
+    the score for each group of tuning parameters is cor + p_cor*(1-sparsity)*max_cor
+    This is not necessary when you have good tuning parameters candidates.
+    Otherwise, you may miss the sparse sols and in this case, adding some score for those with high sparsity might be a good idea.
+    
+    
+    
     Returns
     -------
     Selected tuning para
