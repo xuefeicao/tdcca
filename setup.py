@@ -7,7 +7,6 @@ setup(
     version="0.0.0",
     description="Time-dependent Canonical Correlation Analysis",
     author="Xuefei Cao, Xi Luo, Bjorn Sandstede",
-    author_email="xcstf01@gmail.com",
     packages=['tdcca'],
     long_description=readme,
     long_description_content_type='text/markdown',
