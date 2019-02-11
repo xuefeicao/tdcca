@@ -1,5 +1,5 @@
 # Time-dependent Canonical Correlation Analysis 
-Canonical Correlation Analysis is a technique in multivariate data analysis for finding correlation and pairs of vectors that maximizes the correlation between a set of paired variables. Many important problems involve recoding time-dependent observations. In order to understand the coupling dynamics between the two sources, spot trends, detect anomalies, in this paper, we introduce the time-dependent canonical correlation analysis (TDCCA), a method of inferring time-dependent canonical vectors of paired variables.  
+Canonical Correlation Analysis is a technique in multivariate data analysis for finding correlation and pairs of vectors that maximizes the correlation between a set of paired variables. Many important problems involve recoding time-dependent observations. In order to understand the coupling dynamics between the two sources, spot trends, detect anomalies, in this paper, we introduce the time-dependent canonical correlation analysis (TDCCA), a method of inferring time-dependent canonical vectors of paired variables.  For more details of our paper, please refer to the draft provided in this repo. 
 
 
 ## Getting Started
