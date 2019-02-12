@@ -62,8 +62,9 @@ The test has been conducted in both Linux and Mac Os.
 
 * **Xuefei Cao** - *Maintainer* - (https://github.com/xuefeicao)
 * **Jun Ke**
-* **Xi Luo** (http://bigcomplexdata.com/)
 * **Björn Sandstede** (http://www.dam.brown.edu/people/sandsted/)
+* **Xi Luo** (http://bigcomplexdata.com/)
+
 
 
 ## License
